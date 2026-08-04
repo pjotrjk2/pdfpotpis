@@ -46,6 +46,15 @@ Optional: if Inno Setup 6 is installed, also builds `installer\output\PDFPotpis-
 5. Choose a certificate (PIN dialog may appear for the smart card)
 6. Save the signed PDF
 
+## Website (landing page)
+
+Static one-page site in `website/` (HTML + CSS, no JavaScript). Open `website/index.html` in a browser, or deploy the `website/` folder to any static host (Cloudflare Pages, Netlify, GitHub Pages).
+
+Before going live:
+
+1. Replace `https://pdfpotpis.example/` in `index.html`, `robots.txt`, and `sitemap.xml` with your real domain.
+2. Point the download buttons at your installer (place `PDFPotpis-Setup.exe` in `website/downloads/`, or use a GitHub Releases URL).
+
 ## License note
 
 PDF signing uses [iText](https://itextpdf.com/) (AGPL). If you distribute this app, comply with AGPL or obtain a commercial iText license.

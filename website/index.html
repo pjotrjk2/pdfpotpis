@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDFPotpis — besplatno digitalno potpisivanje PDF-a (Windows)</title>
+  <meta name="description" content="Besplatna Windows aplikacija za lokalno potpisivanje PDF dokumenata sertifikatom sa lične karte. Ništa se ne šalje na internet. Preuzmite instalater.">
+  <meta name="keywords" content="potpisivanje PDF, digitalni potpis, lična karta, besplatno, Windows, PDF potpis, sertifikat">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pdfpotpis.example/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sr_RS">
+  <meta property="og:title" content="PDFPotpis — besplatno potpisivanje PDF-a">
+  <meta property="og:description" content="Lokalna Windows aplikacija za digitalni potpis PDF-a sertifikatom sa lične karte. Bez slanja dokumenata na server.">
+  <meta property="og:url" content="https://pdfpotpis.example/">
+  <meta property="og:image" content="https://pdfpotpis.example/og.svg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PDFPotpis — besplatno potpisivanje PDF-a">
+  <meta name="twitter:description" content="Lokalna Windows aplikacija za digitalni potpis PDF-a. Preuzmite besplatno.">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PDFPotpis",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "RSD"
+    },
+    "description": "Lokalna Windows aplikacija za pregled i digitalno potpisivanje PDF dokumenata sertifikatom sa lične karte ili iz Windows skladišta.",
+    "inLanguage": "sr",
+    "isAccessibleForFree": true
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#sadrzaj">Preskoči na sadržaj</a>
+
+  <header class="top">
+    <div class="wrap top__inner">
+      <a class="logo" href="#">PDFPotpis</a>
+      <nav class="nav" aria-label="Glavna navigacija">
+        <a href="#kako">Kako radi</a>
+        <a href="#privatnost">Privatnost</a>
+        <a href="#pitanja">Pitanja</a>
+        <a class="nav__cta" href="#preuzmi">Preuzmi</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="sadrzaj">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="wrap hero__inner">
+        <p class="hero__brand">PDFPotpis</p>
+        <h1 id="hero-title">Digitalni potpis PDF-a, potpuno lokalno.</h1>
+        <p class="hero__lead">
+          Besplatna Windows aplikacija za potpisivanje dokumenata sertifikatom sa lične karte.
+          Ništa ne ide na server.
+        </p>
+        <div class="hero__actions" id="preuzmi">
+          <a class="btn btn--primary" href="downloads/PDFPotpis-Setup.exe" download>
+            Preuzmi za Windows
+          </a>
+          <p class="hero__meta">Windows 10/11 · Instalater · Besplatno</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="kako" aria-labelledby="kako-title">
+      <div class="wrap">
+        <h2 id="kako-title">Kako radi</h2>
+        <p class="section__lead">Tri koraka od otvaranja dokumenta do potpisa.</p>
+        <ol class="steps">
+          <li>
+            <span class="steps__n">1</span>
+            <h3>Otvorite PDF</h3>
+            <p>Pregled u bezbednom režimu — JavaScript u dokumentu se ne izvršava.</p>
+          </li>
+          <li>
+            <span class="steps__n">2</span>
+            <h3>Postavite pečat</h3>
+            <p>Prevucite vizuelni potpis na željeno mesto na stranici.</p>
+          </li>
+          <li>
+            <span class="steps__n">3</span>
+            <h3>Izaberite sertifikat</h3>
+            <p>Potpišite sertifikatom sa lične karte ili drugim iz Windows skladišta.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section section--tone" id="privatnost" aria-labelledby="privatnost-title">
+      <div class="wrap privacy">
+        <h2 id="privatnost-title">Sve ostaje na vašem računaru</h2>
+        <p>
+          Dokumenti i sertifikati obrađuju se isključivo lokalno. Aplikacija ne šalje podatke na
+          internet, ne čuva dokumente na udaljenim serverima i ne prikuplja telemetriju.
+          Privatni ključ ostaje na kartici ili u sistemskom skladištu.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="pitanja" aria-labelledby="pitanja-title">
+      <div class="wrap">
+        <h2 id="pitanja-title">Česta pitanja</h2>
+        <div class="faq">
+          <details>
+            <summary>Da li je PDFPotpis besplatan?</summary>
+            <p>Da. Aplikacija je besplatna za preuzimanje i korišćenje. Zbog biblioteke za potpisivanje (iText) važi AGPL licenca ako dalje distribuirate softver.</p>
+          </details>
+          <details>
+            <summary>Da li radi sa ličnom kartom (MUP RS)?</summary>
+            <p>Da, ako je middleware/drajver instaliran i sertifikat vidljiv u Windows skladištu (<code>CurrentUser\My</code>). PIN dijalog otvara operativni sistem.</p>
+          </details>
+          <details>
+            <summary>Na kojim sistemima radi?</summary>
+            <p>Samo Windows 10 i Windows 11 (x64). macOS i Linux nisu podržani u ovoj verziji.</p>
+          </details>
+          <details>
+            <summary>Da li se dokumenti šalju negde?</summary>
+            <p>Ne. Potpisivanje i pregled rade lokalno. Ova stranica služi samo za preuzimanje instalatera.</p>
+          </details>
+          <details>
+            <summary>Gde da sačuvam potpisani PDF?</summary>
+            <p>Nakon potpisa koristite Sačuvaj ili Sačuvaj kao — birate putanju na svom disku.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--cta" aria-labelledby="cta-title">
+      <div class="wrap cta">
+        <h2 id="cta-title">Spremni za potpis?</h2>
+        <p>Preuzmite instalater i potpisujte PDF-ove bez naloga i bez oblaka.</p>
+        <a class="btn btn--primary" href="downloads/PDFPotpis-Setup.exe" download>
+          Preuzmi PDFPotpis
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <p><strong>PDFPotpis</strong> — lokalno potpisivanje PDF-a za Windows.</p>
+      <p class="footer__note">
+        Potpisivanje koristi <a href="https://itextpdf.com/" rel="noopener">iText</a> (AGPL).
+        Ažurirajte <code>canonical</code> URL i putanju instalatera pre objave.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
