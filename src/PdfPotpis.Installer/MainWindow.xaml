@@ -1,0 +1,48 @@
+﻿<Window x:Class="PdfPotpis.Installer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Instalacija — PDFPotpis"
+        Height="460" Width="620"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="{StaticResource Bg}">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="PDFPotpis"
+                   FontFamily="Georgia"
+                   FontSize="30"
+                   FontWeight="SemiBold"
+                   Foreground="#1C2A1F"/>
+
+        <!-- Step 1: welcome + folder -->
+        <StackPanel Grid.Row="1" Name="StepFolder" Margin="0,20,0,0">
+            <TextBlock TextWrapping="Wrap" FontSize="14" LineHeight="22" Margin="0,0,0,16"
+                       Text="Ovaj čarobnjak će instalirati PDFPotpis na vaš računar. Aplikacija radi potpuno lokalno — ne šalje podatke na internet i ne čuva dokumente na udaljenim serverima. Nema dodatnih opcija tokom instalacije."/>
+            <TextBlock Text="Folder instalacije" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Izaberi…" Width="90" Height="30" Click="Browse_Click" Margin="8,0,0,0"/>
+                <TextBox Name="FolderBox" Height="30" VerticalContentAlignment="Center" Padding="6,0"/>
+            </DockPanel>
+        </StackPanel>
+
+        <!-- Step 2: progress / done -->
+        <StackPanel Grid.Row="1" Name="StepProgress" Margin="0,20,0,0" Visibility="Collapsed">
+            <TextBlock Name="ProgressTitle" Text="Instalacija u toku…" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12"/>
+            <ProgressBar Name="ProgressBar" Height="18" Minimum="0" Maximum="100" Value="0"/>
+            <TextBlock Name="ProgressDetail" Margin="0,10,0,0" TextWrapping="Wrap" Foreground="#444"/>
+            <TextBlock Name="ValidationText" Margin="0,18,0,0" TextWrapping="Wrap" FontWeight="SemiBold" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <DockPanel Grid.Row="2" LastChildFill="False">
+            <Button DockPanel.Dock="Right" Name="BtnPrimary" Content="Instaliraj" Width="120" Height="34"
+                    Background="{StaticResource Accent}" Foreground="White" Click="Primary_Click"/>
+            <Button DockPanel.Dock="Right" Name="BtnCancel" Content="Otkaži" Width="100" Height="34"
+                    Margin="0,0,10,0" Click="Cancel_Click"/>
+        </DockPanel>
+    </Grid>
+</Window>

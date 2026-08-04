@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+# Planning & Documentation Artifacts
+- **Auto-Plan Requirement**: Before writing large or complex features, always generate a structured implementation plan.
+- **Strict Naming Convention**: Direct the user to save the plan (or create it using file tools) in the docs/plans/ folder using the exact format: `YYYYMMDD_NN_short_name.md`.
+  - `YYYYMMDD`: Current year, month, and day (e.g., 20260713).
+  - `NN`: Sequential zero-padded index starting at `01` for that day.
+  - `short_name`: Snake_case description of the task.
+- **Example File**: `20260713_01_google_auth_integration.md`

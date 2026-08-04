@@ -1,0 +1,18 @@
+﻿<Application x:Class="PdfPotpis.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="AppBg" Color="#E8E4DA"/>
+        <SolidColorBrush x:Key="PanelBg" Color="#F7F4EC"/>
+        <SolidColorBrush x:Key="Accent" Color="#1F4D3A"/>
+        <SolidColorBrush x:Key="AccentText" Color="#F7F4EC"/>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Background" Value="{StaticResource PanelBg}"/>
+            <Setter Property="BorderBrush" Value="#C4BEB0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Application.Resources>
+</Application>
