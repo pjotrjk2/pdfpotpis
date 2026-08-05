@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 
@@ -8,6 +9,10 @@ namespace PdfPotpis.Services;
 /// </summary>
 public sealed class CertificateService
 {
+    private const string OidGivenName = "2.5.4.42";
+    private const string OidSurname = "2.5.4.4";
+    private const string OidSerialNumber = "2.5.4.5";
+
     public X509Certificate2? PickSigningCertificate(Window owner)
     {
         using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
@@ -42,6 +47,13 @@ public sealed class CertificateService
 
     public static string GetDisplayName(X509Certificate2 certificate)
     {
+        (string givenName, string surname) = GetGivenNameAndSurname(certificate);
+        string combined = $"{givenName} {surname}".Trim();
+        if (!string.IsNullOrWhiteSpace(combined))
+        {
+            return combined;
+        }
+
         string? simple = certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false);
         if (!string.IsNullOrWhiteSpace(simple))
         {
@@ -51,9 +63,22 @@ public sealed class CertificateService
         return certificate.Subject;
     }
 
-    public static (string GivenName, string Surname) SplitName(X509Certificate2 certificate)
+    /// <summary>
+    /// Reads givenName / surname from the subject DN (present on MUP certificates).
+    /// Falls back to splitting the common name as "Ime Prezime".
+    /// </summary>
+    public static (string GivenName, string Surname) GetGivenNameAndSurname(X509Certificate2 certificate)
     {
-        string display = GetDisplayName(certificate);
+        string? given = GetSubjectRdn(certificate, OidGivenName);
+        string? surname = GetSubjectRdn(certificate, OidSurname);
+
+        if (!string.IsNullOrWhiteSpace(given) || !string.IsNullOrWhiteSpace(surname))
+        {
+            return (given?.Trim() ?? string.Empty, surname?.Trim() ?? string.Empty);
+        }
+
+        string display = certificate.GetNameInfo(X509NameType.SimpleName, forIssuer: false)
+                         ?? certificate.Subject;
         string[] parts = display.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (parts.Length == 0)
         {
@@ -65,6 +90,38 @@ public sealed class CertificateService
             return (parts[0], string.Empty);
         }
 
-        return (parts[^1], string.Join(' ', parts.Take(parts.Length - 1)));
+        return (parts[0], string.Join(' ', parts.Skip(1)));
+    }
+
+    /// <summary>
+    /// Subject SERIALNUMBER (typically JMBG on MUP certificates).
+    /// </summary>
+    public static string GetPersonalId(X509Certificate2 certificate)
+    {
+        return GetSubjectRdn(certificate, OidSerialNumber)?.Trim() ?? string.Empty;
+    }
+
+    public static string GetCertificateSerial(X509Certificate2 certificate)
+    {
+        return certificate.SerialNumber ?? string.Empty;
+    }
+
+    private static string? GetSubjectRdn(X509Certificate2 certificate, string oid)
+    {
+        foreach (X500RelativeDistinguishedName rdn in certificate.SubjectName.EnumerateRelativeDistinguishedNames())
+        {
+            if (rdn.HasMultipleElements)
+            {
+                continue;
+            }
+
+            Oid type = rdn.GetSingleElementType();
+            if (string.Equals(type.Value, oid, StringComparison.Ordinal))
+            {
+                return rdn.GetSingleElementValue();
+            }
+        }
+
+        return null;
     }
 }

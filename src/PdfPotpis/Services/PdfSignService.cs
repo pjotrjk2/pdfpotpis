@@ -2,8 +2,9 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using iText.Bouncycastle.X509;
 using iText.Commons.Bouncycastle.Cert;
-using iText.Forms.Fields.Properties;
 using iText.Forms.Form.Element;
+using iText.IO.Font;
+using iText.Kernel.Font;
 using iText.Kernel.Pdf;
 using iText.Signatures;
 using Org.BouncyCastle.X509;
@@ -16,6 +17,9 @@ namespace PdfPotpis.Services;
 /// </summary>
 public sealed class PdfSignService
 {
+    public const float DefaultStampWidthPts = 260f;
+    public const float DefaultStampHeightPts = 48f;
+
     public byte[] Sign(
         byte[] pdfBytes,
         X509Certificate2 certificate,
@@ -31,24 +35,13 @@ public sealed class PdfSignService
             throw new InvalidOperationException("Izabrani sertifikat nema privatni ključ.");
         }
 
-        string displayName = CertificateService.GetDisplayName(certificate);
-        (string givenName, string surname) = CertificateService.SplitName(certificate);
-        string signatureId = certificate.SerialNumber ?? Guid.NewGuid().ToString("N");
         string fieldName = "PdfPotpis_" + Guid.NewGuid().ToString("N")[..8];
-
-        string appearanceText =
-            $"Digitalni potpis{Environment.NewLine}" +
-            $"Ime: {givenName}{Environment.NewLine}" +
-            $"Prezime: {surname}{Environment.NewLine}" +
-            $"ID: {signatureId}";
-
-        var signedAppearanceText = new SignedAppearanceText()
-            .SetSignedBy(displayName)
-            .SetReasonLine(reason ?? "Digitalni potpis dokumenta")
-            .SetLocationLine($"ID: {signatureId}");
+        string appearanceText = BuildAppearanceText(certificate, DateTime.Now);
 
         var appearance = new SignatureFieldAppearance(fieldName)
-            .SetContent(appearanceText, signedAppearanceText);
+            .SetContent(appearanceText)
+            .SetFont(CreateAppearanceFont())
+            .SetFontSize(8);
 
         var rect = new iText.Kernel.Geom.Rectangle(
             placement.PdfX,
@@ -78,6 +71,52 @@ public sealed class PdfSignService
         pdfSigner.SignDetached(externalSignature, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
 
         return output.ToArray();
+    }
+
+    public static string BuildAppearanceText(X509Certificate2 certificate, DateTime signedAt)
+    {
+        (string givenName, string surname) = CertificateService.GetGivenNameAndSurname(certificate);
+        string personalId = CertificateService.GetPersonalId(certificate);
+        string certSerial = CertificateService.GetCertificateSerial(certificate);
+
+        string nameLine = $"{givenName} {surname}".Trim();
+        if (!string.IsNullOrWhiteSpace(personalId))
+        {
+            nameLine = $"{nameLine} {personalId}".Trim();
+        }
+
+        nameLine = $"{nameLine} Sign".Trim();
+
+        string timeLine = signedAt.ToString("HH:mm:ss dd.MM.yyyy.");
+        string idLine = string.IsNullOrWhiteSpace(certSerial) ? "ID:" : $"ID: {certSerial}";
+
+        return $"{nameLine}{Environment.NewLine}{timeLine}{Environment.NewLine}{idLine}";
+    }
+
+    private static PdfFont CreateAppearanceFont()
+    {
+        string[] candidates =
+        [
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "arial.ttf"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "ARIAL.TTF"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "segoeui.ttf"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "calibri.ttf"),
+        ];
+
+        foreach (string path in candidates)
+        {
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            return PdfFontFactory.CreateFont(
+                path,
+                PdfEncodings.IDENTITY_H,
+                PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
+        }
+
+        return PdfFontFactory.CreateFont();
     }
 
     private static IX509Certificate[] BuildChain(X509Certificate2 certificate)

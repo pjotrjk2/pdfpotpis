@@ -32,7 +32,8 @@ public sealed class PdfRenderService
             using var pageReader = docReader.GetPageReader(i);
             int width = pageReader.GetPageWidth();
             int height = pageReader.GetPageHeight();
-            byte[] rawBgra = pageReader.GetImage();
+            // Signature widgets are annotations/forms; default GetImage() skips them.
+            byte[] rawBgra = pageReader.GetImage(RenderFlags.RenderAnnotations);
             BitmapSource bitmap = CreateBitmap(rawBgra, width, height);
 
             float pageWidthPts = i < pageSizes.Count ? pageSizes[i].Width : 595f;

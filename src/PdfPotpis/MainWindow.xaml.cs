@@ -205,8 +205,8 @@ public partial class MainWindow : Window
         _activeCanvas = canvas;
         _activePage = first;
 
-        double stampW = first.Image.PixelWidth * (180.0 / first.PageWidthPts);
-        double stampH = first.Image.PixelHeight * (60.0 / first.PageHeightPts);
+        double stampW = first.Image.PixelWidth * (PdfSignService.DefaultStampWidthPts / first.PageWidthPts);
+        double stampH = first.Image.PixelHeight * (PdfSignService.DefaultStampHeightPts / first.PageHeightPts);
 
         _stampPreview = CreateStampPreview(stampW, stampH);
         Canvas.SetLeft(_stampPreview, 40);
@@ -250,9 +250,9 @@ public partial class MainWindow : Window
             Cursor = Cursors.SizeAll,
             Child = new TextBlock
             {
-                Text = "Digitalni potpis\n(prevucite ovde)",
-                Margin = new Thickness(8),
-                FontSize = 12,
+                Text = "IME PREZIME … Sign\nhh:mm:ss dd.mm.yyyy.\nID: …",
+                Margin = new Thickness(6),
+                FontSize = 10,
                 TextWrapping = TextWrapping.Wrap,
                 Foreground = new SolidColorBrush(Color.FromRgb(28, 42, 31))
             }

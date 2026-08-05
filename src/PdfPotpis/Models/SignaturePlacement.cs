@@ -12,7 +12,7 @@ public sealed class SignaturePlacement
 
     public float PdfY { get; set; }
 
-    public float WidthPts { get; set; } = 180f;
+    public float WidthPts { get; set; } = 260f;
 
-    public float HeightPts { get; set; } = 60f;
+    public float HeightPts { get; set; } = 48f;
 }
