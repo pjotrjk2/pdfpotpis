@@ -57,4 +57,6 @@ Before going live:
 
 ## License note
 
-PDF signing uses [iText](https://itextpdf.com/) (AGPL). If you distribute this app, comply with AGPL or obtain a commercial iText license.
+**My code:** do whatever the fuck you want with it.
+
+**iText:** PDF signing uses [iText](https://itextpdf.com/) (AGPL). If you distribute a build that includes iText, you must still comply with AGPL for that combined work, or obtain a commercial iText license. That obligation comes from iText, not from my code.
