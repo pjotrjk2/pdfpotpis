@@ -73,4 +73,29 @@ internal static class FileAssociation
 
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
     }
+
+    public static void Unregister()
+    {
+        try
+        {
+            Registry.CurrentUser.DeleteSubKeyTree($@"Software\Classes\{ProgId}", throwOnMissingSubKey: false);
+            using (RegistryKey? openWith = Registry.CurrentUser.OpenSubKey(@"Software\Classes\.pdf\OpenWithProgids", writable: true))
+            {
+                openWith?.DeleteValue(ProgId, throwOnMissingValue: false);
+            }
+
+            Registry.CurrentUser.DeleteSubKeyTree($@"Software\Classes\Applications\{AppKeyName}", throwOnMissingSubKey: false);
+            Registry.CurrentUser.DeleteSubKeyTree(@"Software\PDFPotpis", throwOnMissingSubKey: false);
+            using (RegistryKey? registered = Registry.CurrentUser.OpenSubKey(@"Software\RegisteredApplications", writable: true))
+            {
+                registered?.DeleteValue("PDFPotpis", throwOnMissingValue: false);
+            }
+
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
+        }
+        catch
+        {
+            // Best-effort cleanup.
+        }
+    }
 }

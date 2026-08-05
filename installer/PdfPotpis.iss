@@ -3,7 +3,7 @@
 ; Or run: scripts\build-installer.ps1
 
 #define MyAppName "PDFPotpis"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "PDFPotpis"
 #define MyAppExeName "PdfPotpis.exe"
 #define PublishDir "..\src\PdfPotpis\bin\Release\net9.0-windows\win-x64\publish"

@@ -128,6 +128,8 @@ public partial class MainWindow : Window
             {
                 ProgressDetail.Text = "Registracija PDF asocijacije…";
                 FileAssociation.Register(exePath);
+                ProgressDetail.Text = "Registracija u Apps & features…";
+                UninstallRegistration.Register(targetDir, exePath);
             }
 
             CreateStartMenuShortcut(exePath);
@@ -140,7 +142,8 @@ public partial class MainWindow : Window
             {
                 ValidationText.Text =
                     $"Uspeh: PDFPotpis je instaliran u:{Environment.NewLine}{targetDir}" +
-                    $"{Environment.NewLine}{Environment.NewLine}Aplikacija je dostupna u „Otvori pomoću” za PDF fajlove.";
+                    $"{Environment.NewLine}{Environment.NewLine}" +
+                    "Dostupan je u „Otvori pomoću” za PDF i u Podešavanja → Aplikacije.";
                 ValidationText.Foreground = System.Windows.Media.Brushes.DarkGreen;
                 ProgressDetail.Text = "Validacija: PdfPotpis.exe je pronađen.";
             }
