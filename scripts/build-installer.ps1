@@ -39,6 +39,7 @@ if (Test-Path $outputDir) { Remove-Item $outputDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
 dotnet publish $installerProject @singleFileArgs `
     -p:IncludeAllContentForSelfExtract=true `
+    -p:EmbedAppPayload=true `
     -o $outputDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish (installer) failed" }
 
@@ -48,6 +49,9 @@ if (-not (Test-Path $setupExe)) { throw "Installer not found: $setupExe" }
 Write-Host "==> Staging portable build..."
 $portableExe = Join-Path $outputDir "PDFPotpis-Portable.exe"
 Copy-Item -Path $appExe -Destination $portableExe -Force
+
+# Drop staged payload so the IDE does not keep indexing a 60MB+ exe
+Remove-Item -Force (Join-Path $payloadDir "PdfPotpis.exe") -ErrorAction SilentlyContinue
 
 $iscc = @(
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",

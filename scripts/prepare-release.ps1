@@ -28,6 +28,8 @@ $indexPath = Join-Path $root "website\index.html"
 $downloadsDir = Join-Path $root "website\downloads"
 $setupName = "PDFPotpis-Setup.exe"
 $portableName = "PDFPotpis-Portable.exe"
+$setupZipName = "PDFPotpis-Setup.zip"
+$portableZipName = "PDFPotpis-Portable.zip"
 $installerOutput = Join-Path $root "installer\output\$setupName"
 $portableOutput = Join-Path $root "installer\output\$portableName"
 $buildScript = Join-Path $PSScriptRoot "build-installer.ps1"
@@ -92,14 +94,32 @@ function Set-SiteSha([string]$Marker, [string]$Sha) {
     Write-TextFile $indexPath $html
 }
 
-function Stage-Download([string]$SourcePath, [string]$FileName, [string]$ShaMarker) {
-    $dest = Join-Path $downloadsDir $FileName
-    Copy-Item -Path $SourcePath -Destination $dest -Force
-    $sha = (Get-FileHash -Path $dest -Algorithm SHA256).Hash.ToLowerInvariant()
-    $shaFile = Join-Path $downloadsDir "$FileName.sha256"
-    Write-TextFile $shaFile "$sha  $FileName`n"
+function Stage-DownloadZip([string]$SourceExePath, [string]$ZipFileName, [string]$ShaMarker) {
+    $exeName = [System.IO.Path]::GetFileName($SourceExePath)
+    $zipPath = Join-Path $downloadsDir $ZipFileName
+    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+
+    # Compress into a temp folder so the zip root contains only the exe (not full paths)
+    $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("pdfpotpis-zip-" + [guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Force -Path $stage | Out-Null
+    try {
+        Copy-Item -Path $SourceExePath -Destination (Join-Path $stage $exeName) -Force
+        Compress-Archive -Path (Join-Path $stage $exeName) -DestinationPath $zipPath -CompressionLevel Optimal -Force
+    }
+    finally {
+        Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
+    }
+
+    $sha = (Get-FileHash -Path $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $shaFile = Join-Path $downloadsDir "$ZipFileName.sha256"
+    Write-TextFile $shaFile "$sha  $ZipFileName`n"
     Set-SiteSha $ShaMarker $sha
-    return [pscustomobject]@{ Path = $dest; ShaFile = $shaFile; Sha = $sha }
+
+    $rawKb = [math]::Round((Get-Item $SourceExePath).Length / 1KB)
+    $zipKb = [math]::Round((Get-Item $zipPath).Length / 1KB)
+    Write-Host ("  {0}: {1} KB -> {2} KB" -f $ZipFileName, $rawKb, $zipKb)
+
+    return [pscustomobject]@{ Path = $zipPath; ShaFile = $shaFile; Sha = $sha }
 }
 
 # --- resolve version ---
@@ -129,18 +149,24 @@ if (-not (Test-Path $installerOutput)) { throw "Installer not found: $installerO
 if (-not (Test-Path $portableOutput)) { throw "Portable build not found: $portableOutput" }
 
 # --- stage downloads ---
-Write-Host "==> Staging downloads + SHA checksums..."
+Write-Host "==> Staging zip downloads + SHA checksums..."
 New-Item -ItemType Directory -Force -Path $downloadsDir | Out-Null
 
-$setup = Stage-Download $installerOutput $setupName "SHA256-SETUP"
-$portable = Stage-Download $portableOutput $portableName "SHA256-PORTABLE"
+# Remove stale loose exes from older releases
+Remove-Item -Force (Join-Path $downloadsDir $setupName) -ErrorAction SilentlyContinue
+Remove-Item -Force (Join-Path $downloadsDir $portableName) -ErrorAction SilentlyContinue
+Remove-Item -Force (Join-Path $downloadsDir "$setupName.sha256") -ErrorAction SilentlyContinue
+Remove-Item -Force (Join-Path $downloadsDir "$portableName.sha256") -ErrorAction SilentlyContinue
+
+$setup = Stage-DownloadZip $installerOutput $setupZipName "SHA256-SETUP"
+$portable = Stage-DownloadZip $portableOutput $portableZipName "SHA256-PORTABLE"
 
 Write-Host ""
 Write-Host "Staged:"
 Write-Host "  $($setup.Path)"
-Write-Host "  SHA-256 (setup): $($setup.Sha)"
+Write-Host "  SHA-256 (setup zip): $($setup.Sha)"
 Write-Host "  $($portable.Path)"
-Write-Host "  SHA-256 (portable): $($portable.Sha)"
+Write-Host "  SHA-256 (portable zip): $($portable.Sha)"
 
 # --- optional GitHub release ---
 $assets = @($setup.Path, $setup.ShaFile, $portable.Path, $portable.ShaFile)

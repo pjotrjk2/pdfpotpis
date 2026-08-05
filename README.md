@@ -48,7 +48,7 @@ Installed builds register PDFPotpis under the current user so it appears in **Op
 One product version (app, installer, site) lives in `Directory.Build.props`.
 
 ```powershell
-# Rebuild, copy both exes → website/downloads, write SHAs onto the site
+# Rebuild, zip both exes → website/downloads, write SHAs onto the site
 .\scripts\prepare-release.ps1
 
 # Bump patch (1.0.0 → 1.0.1), build, stage downloads + SHA
@@ -62,11 +62,11 @@ This will:
 
 1. Sync the version into the Inno script, manifests, and landing page
 2. Publish single-file app + installer (`build-installer.ps1`)
-3. Copy `PDFPotpis-Setup.exe` and `PDFPotpis-Portable.exe` into `website/downloads/`
-4. Write `.sha256` files and inject both hashes into `index.html`
+3. Pack `PDFPotpis-Setup.exe` and `PDFPotpis-Portable.exe` into zips under `website/downloads/`
+4. Write `.sha256` files for the zips and inject both hashes into `index.html`
 5. With `-CreateRelease`, create/upload a GitHub Release (`vX.Y.Z`) when `gh` is available
 
-Deploy the `website/` folder (including `downloads/`) to your static host after running the script. For a Linux web root, upload the contents of `website/` (two exes + HTML/CSS/assets).
+Deploy the `website/` folder (including `downloads/`) to your static host after running the script. For a Linux web root, upload the contents of `website/` (two zips + HTML/CSS/assets).
 
 ## Sign flow
 
@@ -84,7 +84,7 @@ Static one-page site in `website/` (HTML + CSS, no JavaScript). Open `website/in
 Before going live:
 
 1. Replace `https://pdfpotpis.example/` in `index.html`, `robots.txt`, and `sitemap.xml` with your real domain.
-2. Run `.\scripts\prepare-release.ps1` so `website/downloads/` has the installer and the page shows the matching SHA-256.
+2. Run `.\scripts\prepare-release.ps1` so `website/downloads/` has the zip archives and the page shows the matching SHA-256.
 
 ## License note
 

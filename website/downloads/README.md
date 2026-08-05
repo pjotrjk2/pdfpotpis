@@ -2,9 +2,9 @@
 
 Filled by `scripts\prepare-release.ps1`:
 
-- `PDFPotpis-Setup.exe` — single-file installer
-- `PDFPotpis-Setup.exe.sha256`
-- `PDFPotpis-Portable.exe` — single-file app (no install)
-- `PDFPotpis-Portable.exe.sha256`
+- `PDFPotpis-Setup.zip` — single-file installer inside a zip
+- `PDFPotpis-Setup.zip.sha256`
+- `PDFPotpis-Portable.zip` — single-file portable app inside a zip
+- `PDFPotpis-Portable.zip.sha256`
 
-Checksums are also injected into `index.html`. Binaries are gitignored; stage them locally before deploying `website/`.
+Checksums are also injected into `index.html`. Archives are gitignored; stage them locally before deploying `website/`.

@@ -16,8 +16,10 @@
     <Resource Include="..\..\assets\PdfPotpis.ico" Link="Assets\PdfPotpis.ico" />
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('AppPayload')">
-    <Content Include="AppPayload\**\*">
+  <!-- Only embed payload when explicitly requested (release/installer publish).
+       Keeps the IDE/solution from loading the large staged PdfPotpis.exe. -->
+  <ItemGroup Condition="'$(EmbedAppPayload)' == 'true' And Exists('AppPayload')">
+    <Content Include="AppPayload\**\*" Exclude="AppPayload\.gitkeep">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <TargetPath>AppPayload\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
