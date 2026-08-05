@@ -5,13 +5,17 @@
         Height="800" Width="1100"
         MinHeight="500" MinWidth="800"
         Background="{StaticResource AppBg}"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        PreviewMouseWheel="Window_PreviewMouseWheel"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <DockPanel>
         <Menu DockPanel.Dock="Top" Background="{StaticResource PanelBg}">
             <MenuItem Header="_Fajl">
                 <MenuItem Header="_Otvori..." Click="Open_Click" InputGestureText="Ctrl+O"/>
                 <MenuItem Header="_Sačuvaj" Click="Save_Click" InputGestureText="Ctrl+S" Name="MenuSave"/>
                 <MenuItem Header="Sačuvaj _kao..." Click="SaveAs_Click" Name="MenuSaveAs"/>
+                <MenuItem Header="_Štampaj..." Click="Print_Click" InputGestureText="Ctrl+P" Name="MenuPrint"/>
                 <Separator/>
                 <MenuItem Header="_Izađi" Click="Exit_Click"/>
             </MenuItem>
@@ -29,6 +33,7 @@
                 <Button Content="Otvori" Click="Open_Click"/>
                 <Button Content="Sačuvaj" Click="Save_Click" Name="BtnSave"/>
                 <Button Content="Sačuvaj kao" Click="SaveAs_Click" Name="BtnSaveAs"/>
+                <Button Content="Štampaj" Click="Print_Click" Name="BtnPrint"/>
                 <Separator/>
                 <Button Content="Potpiši" Click="Sign_Click" Name="BtnSign"
                         Background="{StaticResource Accent}" Foreground="{StaticResource AccentText}"/>
@@ -40,8 +45,34 @@
         </ToolBarTray>
 
         <StatusBar DockPanel.Dock="Bottom" Background="{StaticResource PanelBg}">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
             <StatusBarItem>
                 <TextBlock Name="StatusText" Text="Spremno. Otvorite PDF fajl."/>
+            </StatusBarItem>
+            <StatusBarItem Grid.Column="1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Zum" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Slider Name="ZoomSlider"
+                            Width="140"
+                            Minimum="0.25"
+                            Maximum="3"
+                            Value="1"
+                            TickFrequency="0.25"
+                            IsSnapToTickEnabled="False"
+                            VerticalAlignment="Center"
+                            ValueChanged="ZoomSlider_ValueChanged"/>
+                    <TextBlock Name="ZoomLabel" Text="100%" Width="44" Margin="8,0,4,0"
+                               VerticalAlignment="Center" TextAlignment="Right"/>
+                </StackPanel>
             </StatusBarItem>
         </StatusBar>
 
@@ -49,9 +80,34 @@
             <ScrollViewer Name="PdfScroll"
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto"
-                          Background="#D9D4C8">
+                          Background="#D9D4C8"
+                          Cursor="Hand"
+                          PreviewMouseLeftButtonDown="PdfScroll_PreviewMouseLeftButtonDown"
+                          PreviewMouseLeftButtonUp="PdfScroll_PreviewMouseLeftButtonUp"
+                          PreviewMouseMove="PdfScroll_PreviewMouseMove"
+                          LostMouseCapture="PdfScroll_LostMouseCapture">
                 <StackPanel Name="PageHost" Margin="24" HorizontalAlignment="Center"/>
             </ScrollViewer>
+
+            <StackPanel Name="EmptyState"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                <TextBlock Text="Nema otvorenog PDF dokumenta"
+                           FontSize="16"
+                           Foreground="#5A564C"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,16"/>
+                <Button Content="Otvori PDF..."
+                        Click="Open_Click"
+                        Padding="28,12"
+                        FontSize="14"
+                        Margin="0"
+                        Background="{StaticResource Accent}"
+                        Foreground="{StaticResource AccentText}"
+                        BorderBrush="{StaticResource Accent}"
+                        HorizontalAlignment="Center"
+                        Cursor="Hand"/>
+            </StackPanel>
 
             <Border Name="PlacementHint"
                     VerticalAlignment="Top"

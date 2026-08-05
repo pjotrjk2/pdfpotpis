@@ -1,7 +1,9 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using Microsoft.Win32;
 using PdfPotpis.Models;
@@ -11,6 +13,11 @@ namespace PdfPotpis;
 
 public partial class MainWindow : Window
 {
+    private const double MinZoom = 0.25;
+    private const double MaxZoom = 3.0;
+    private const double ZoomStep = 0.05;
+    private const double ArrowScrollStep = 40;
+
     private readonly PdfDocumentService _document = new();
     private readonly PdfRenderService _renderer = new();
     private readonly CertificateService _certificates = new();
@@ -23,13 +30,21 @@ public partial class MainWindow : Window
     private PdfPageImage? _activePage;
     private bool _isDragging;
     private Point _dragOffset;
+    private bool _isPanning;
+    private Point _panStart;
+    private double _panOriginX;
+    private double _panOriginY;
+    private double _zoom = 1.0;
+    private bool _updatingZoomUi;
 
     public MainWindow()
     {
         InitializeComponent();
         UpdateCommandState();
+        ApplyZoom(1.0);
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Open, (_, _) => Open_Click(this, new RoutedEventArgs())));
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Save, (_, _) => Save_Click(this, new RoutedEventArgs())));
+        CommandBindings.Add(new CommandBinding(ApplicationCommands.Print, (_, _) => Print_Click(this, new RoutedEventArgs())));
     }
 
     private void Open_Click(object sender, RoutedEventArgs e)
@@ -122,6 +137,319 @@ public partial class MainWindow : Window
         }
     }
 
+    private void Print_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_document.HasDocument || _pages.Count == 0)
+        {
+            MessageBox.Show(this, "Prvo otvorite PDF dokument.", "PDFPotpis",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            var dialog = new PrintDialog();
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            var document = BuildPrintDocument(dialog.PrintableAreaWidth, dialog.PrintableAreaHeight);
+            dialog.PrintDocument(document.DocumentPaginator, Title);
+            StatusText.Text = "Dokument je poslat na štampu.";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Neuspešno štampanje:{Environment.NewLine}{ex.Message}", "Greška",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private FixedDocument BuildPrintDocument(double printableWidth, double printableHeight)
+    {
+        var document = new FixedDocument();
+        document.DocumentPaginator.PageSize = new Size(printableWidth, printableHeight);
+
+        foreach (PdfPageImage page in _pages)
+        {
+            double scale = Math.Min(
+                printableWidth / Math.Max(page.Image.PixelWidth, 1),
+                printableHeight / Math.Max(page.Image.PixelHeight, 1));
+            double width = page.Image.PixelWidth * scale;
+            double height = page.Image.PixelHeight * scale;
+
+            var image = new Image
+            {
+                Source = page.Image,
+                Width = width,
+                Height = height,
+                Stretch = Stretch.Uniform
+            };
+            FixedPage.SetLeft(image, (printableWidth - width) / 2);
+            FixedPage.SetTop(image, (printableHeight - height) / 2);
+
+            var fixedPage = new FixedPage
+            {
+                Width = printableWidth,
+                Height = printableHeight
+            };
+            fixedPage.Children.Add(image);
+
+            var pageContent = new PageContent();
+            ((IAddChild)pageContent).AddChild(fixedPage);
+            document.Pages.Add(pageContent);
+        }
+
+        return document;
+    }
+
+    private void ZoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!IsLoaded || _updatingZoomUi)
+        {
+            return;
+        }
+
+        ApplyZoom(e.NewValue);
+    }
+
+    private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
+        {
+            return;
+        }
+
+        double delta = e.Delta > 0 ? ZoomStep : -ZoomStep;
+        ApplyZoom(_zoom + delta);
+        e.Handled = true;
+    }
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!_document.HasDocument || PageHost.Children.Count == 0)
+        {
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case Key.PageDown:
+                ScrollPageDown();
+                e.Handled = true;
+                break;
+            case Key.PageUp:
+                ScrollPageUp();
+                e.Handled = true;
+                break;
+            case Key.Up:
+                PdfScroll.ScrollToVerticalOffset(PdfScroll.VerticalOffset - ArrowScrollStep);
+                e.Handled = true;
+                break;
+            case Key.Down:
+                PdfScroll.ScrollToVerticalOffset(PdfScroll.VerticalOffset + ArrowScrollStep);
+                e.Handled = true;
+                break;
+            case Key.Left:
+                PdfScroll.ScrollToHorizontalOffset(PdfScroll.HorizontalOffset - ArrowScrollStep);
+                e.Handled = true;
+                break;
+            case Key.Right:
+                PdfScroll.ScrollToHorizontalOffset(PdfScroll.HorizontalOffset + ArrowScrollStep);
+                e.Handled = true;
+                break;
+        }
+    }
+
+    private void ScrollPageDown()
+    {
+        const double tolerance = 3;
+        IReadOnlyList<(double Top, double Bottom)> bounds = GetPageScrollBounds();
+        if (bounds.Count == 0)
+        {
+            return;
+        }
+
+        double viewportTop = PdfScroll.VerticalOffset;
+        double viewportHeight = PdfScroll.ViewportHeight;
+        int pageIndex = FindPageAtViewportTop(bounds, viewportTop);
+        (double top, double bottom) = bounds[pageIndex];
+        double pageBottomOffset = Math.Max(top, bottom - viewportHeight);
+
+        if (viewportTop >= pageBottomOffset - tolerance)
+        {
+            if (pageIndex + 1 < bounds.Count)
+            {
+                ScrollToVerticalOffset(bounds[pageIndex + 1].Top);
+            }
+        }
+        else
+        {
+            ScrollToVerticalOffset(pageBottomOffset);
+        }
+    }
+
+    private void ScrollPageUp()
+    {
+        const double tolerance = 3;
+        IReadOnlyList<(double Top, double Bottom)> bounds = GetPageScrollBounds();
+        if (bounds.Count == 0)
+        {
+            return;
+        }
+
+        double viewportTop = PdfScroll.VerticalOffset;
+        double viewportHeight = PdfScroll.ViewportHeight;
+        int pageIndex = FindPageAtViewportTop(bounds, viewportTop);
+        (double top, double bottom) = bounds[pageIndex];
+
+        if (viewportTop <= top + tolerance)
+        {
+            if (pageIndex > 0)
+            {
+                (double prevTop, double prevBottom) = bounds[pageIndex - 1];
+                ScrollToVerticalOffset(Math.Max(prevTop, prevBottom - viewportHeight));
+            }
+            else
+            {
+                ScrollToVerticalOffset(0);
+            }
+        }
+        else
+        {
+            ScrollToVerticalOffset(top);
+        }
+    }
+
+    private void ScrollToVerticalOffset(double offset)
+    {
+        PdfScroll.ScrollToVerticalOffset(Math.Clamp(offset, 0, PdfScroll.ScrollableHeight));
+    }
+
+    private static int FindPageAtViewportTop(IReadOnlyList<(double Top, double Bottom)> bounds, double viewportTop)
+    {
+        for (int i = 0; i < bounds.Count; i++)
+        {
+            if (viewportTop < bounds[i].Bottom - 1)
+            {
+                return i;
+            }
+        }
+
+        return bounds.Count - 1;
+    }
+
+    private IReadOnlyList<(double Top, double Bottom)> GetPageScrollBounds()
+    {
+        var result = new List<(double Top, double Bottom)>(PageHost.Children.Count);
+        double viewportOffset = PdfScroll.VerticalOffset;
+
+        foreach (object child in PageHost.Children)
+        {
+            if (child is not FrameworkElement page)
+            {
+                continue;
+            }
+
+            GeneralTransform transform = page.TransformToAncestor(PdfScroll);
+            Rect rect = transform.TransformBounds(new Rect(page.RenderSize));
+            result.Add((rect.Top + viewportOffset, rect.Bottom + viewportOffset));
+        }
+
+        return result;
+    }
+
+    private void PdfScroll_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (_placementMode || !_document.HasDocument || e.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        _isPanning = true;
+        _panStart = e.GetPosition(PdfScroll);
+        _panOriginX = PdfScroll.HorizontalOffset;
+        _panOriginY = PdfScroll.VerticalOffset;
+        PdfScroll.CaptureMouse();
+        PdfScroll.Cursor = Cursors.ScrollAll;
+        e.Handled = true;
+    }
+
+    private void PdfScroll_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_isPanning)
+        {
+            return;
+        }
+
+        Point pos = e.GetPosition(PdfScroll);
+        PdfScroll.ScrollToHorizontalOffset(_panOriginX - (pos.X - _panStart.X));
+        PdfScroll.ScrollToVerticalOffset(_panOriginY - (pos.Y - _panStart.Y));
+    }
+
+    private void PdfScroll_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_isPanning)
+        {
+            return;
+        }
+
+        EndPan();
+        e.Handled = true;
+    }
+
+    private void PdfScroll_LostMouseCapture(object sender, MouseEventArgs e)
+    {
+        EndPan();
+    }
+
+    private void EndPan()
+    {
+        if (!_isPanning)
+        {
+            return;
+        }
+
+        _isPanning = false;
+        if (PdfScroll.IsMouseCaptured)
+        {
+            PdfScroll.ReleaseMouseCapture();
+        }
+
+        UpdatePanCursor();
+    }
+
+    private void UpdatePanCursor()
+    {
+        PdfScroll.Cursor = !_placementMode && _document.HasDocument
+            ? Cursors.Hand
+            : Cursors.Arrow;
+    }
+
+    private void ApplyZoom(double zoom)
+    {
+        _zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
+        PageHost.LayoutTransform = new ScaleTransform(_zoom, _zoom);
+
+        _updatingZoomUi = true;
+        try
+        {
+            if (ZoomSlider is not null && Math.Abs(ZoomSlider.Value - _zoom) > 0.0001)
+            {
+                ZoomSlider.Value = _zoom;
+            }
+
+            if (ZoomLabel is not null)
+            {
+                ZoomLabel.Text = $"{(int)Math.Round(_zoom * 100)}%";
+            }
+        }
+        finally
+        {
+            _updatingZoomUi = false;
+        }
+    }
+
     private void Sign_Click(object sender, RoutedEventArgs e)
     {
         if (!_document.HasDocument || _pages.Count == 0)
@@ -185,6 +513,7 @@ public partial class MainWindow : Window
 
     private void EnterPlacementMode()
     {
+        EndPan();
         CancelPlacementInternal();
         _placementMode = true;
         PlacementHint.Visibility = Visibility.Visible;
@@ -215,6 +544,7 @@ public partial class MainWindow : Window
 
         StatusText.Text = "Režim potpisa: prevucite okvir, zatim potvrdite.";
         UpdateCommandState();
+        UpdatePanCursor();
     }
 
     private void CancelPlacementInternal()
@@ -236,6 +566,7 @@ public partial class MainWindow : Window
         _stampPreview = null;
         _activeCanvas = null;
         _activePage = null;
+        UpdatePanCursor();
     }
 
     private Border CreateStampPreview(double width, double height)
@@ -449,12 +780,16 @@ public partial class MainWindow : Window
     private void UpdateCommandState()
     {
         bool hasDoc = _document.HasDocument;
+        EmptyState.Visibility = hasDoc ? Visibility.Collapsed : Visibility.Visible;
         MenuSave.IsEnabled = hasDoc;
         MenuSaveAs.IsEnabled = hasDoc;
+        MenuPrint.IsEnabled = hasDoc;
         MenuSign.IsEnabled = hasDoc && !_placementMode;
         BtnSave.IsEnabled = hasDoc;
         BtnSaveAs.IsEnabled = hasDoc;
+        BtnPrint.IsEnabled = hasDoc;
         BtnSign.IsEnabled = hasDoc && !_placementMode;
+        UpdatePanCursor();
 
         string title = "PDFPotpis";
         if (!string.IsNullOrWhiteSpace(_document.FilePath))
