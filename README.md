@@ -34,8 +34,39 @@ dotnet run --project src\PdfPotpis\PdfPotpis.csproj -c Release
 .\scripts\build-installer.ps1
 ```
 
-Creates a two-step wizard at `installer\output\PDFPotpis-Setup.exe` (choose folder → progress/validation).  
-Optional: if Inno Setup 6 is installed, also builds `installer\output\PDFPotpis-Setup-1.0.0.exe`.
+Produces single-file artifacts in `installer\output\`:
+
+- `PDFPotpis-Setup.exe` — install wizard (embeds the app)
+- `PDFPotpis-Portable.exe` — run without installing
+
+Optional: if Inno Setup 6 is installed, also builds `PDFPotpis-Setup-<version>.exe`.
+
+Installed builds register PDFPotpis under the current user so it appears in **Open with** for `.pdf` files (does not force itself as the default PDF app).
+
+## Release / deploy prep
+
+One product version (app, installer, site) lives in `Directory.Build.props`.
+
+```powershell
+# Rebuild, copy both exes → website/downloads, write SHAs onto the site
+.\scripts\prepare-release.ps1
+
+# Bump patch (1.0.0 → 1.0.1), build, stage downloads + SHA
+.\scripts\prepare-release.ps1 -Bump patch
+
+# Set an exact version and create a GitHub Release (needs `gh` CLI)
+.\scripts\prepare-release.ps1 -Version 1.2.0 -CreateRelease
+```
+
+This will:
+
+1. Sync the version into the Inno script, manifests, and landing page
+2. Publish single-file app + installer (`build-installer.ps1`)
+3. Copy `PDFPotpis-Setup.exe` and `PDFPotpis-Portable.exe` into `website/downloads/`
+4. Write `.sha256` files and inject both hashes into `index.html`
+5. With `-CreateRelease`, create/upload a GitHub Release (`vX.Y.Z`) when `gh` is available
+
+Deploy the `website/` folder (including `downloads/`) to your static host after running the script. For a Linux web root, upload the contents of `website/` (two exes + HTML/CSS/assets).
 
 ## Sign flow
 
@@ -53,7 +84,7 @@ Static one-page site in `website/` (HTML + CSS, no JavaScript). Open `website/in
 Before going live:
 
 1. Replace `https://pdfpotpis.example/` in `index.html`, `robots.txt`, and `sitemap.xml` with your real domain.
-2. Point the download buttons at your installer (place `PDFPotpis-Setup.exe` in `website/downloads/`, or use a GitHub Releases URL).
+2. Run `.\scripts\prepare-release.ps1` so `website/downloads/` has the installer and the page shows the matching SHA-256.
 
 ## License note
 

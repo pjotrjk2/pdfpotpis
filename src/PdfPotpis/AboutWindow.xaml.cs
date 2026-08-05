@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Navigation;
 
@@ -9,6 +10,10 @@ public partial class AboutWindow : Window
     public AboutWindow()
     {
         InitializeComponent();
+        var version = Assembly.GetExecutingAssembly().GetName().Version;
+        VersionText.Text = version is null
+            ? "Verzija nepoznata"
+            : $"Verzija {version.Major}.{version.Minor}.{version.Build}";
     }
 
     private void IssuesLink_RequestNavigate(object sender, RequestNavigateEventArgs e)

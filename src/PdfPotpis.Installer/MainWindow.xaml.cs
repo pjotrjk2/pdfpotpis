@@ -124,6 +124,12 @@ public partial class MainWindow : Window
 
             string exePath = Path.Combine(targetDir, "PdfPotpis.exe");
             bool ok = File.Exists(exePath);
+            if (ok)
+            {
+                ProgressDetail.Text = "Registracija PDF asocijacije…";
+                FileAssociation.Register(exePath);
+            }
+
             CreateStartMenuShortcut(exePath);
 
             _step = WizardStep.Done;
@@ -132,7 +138,9 @@ public partial class MainWindow : Window
             ValidationText.Visibility = Visibility.Visible;
             if (ok)
             {
-                ValidationText.Text = $"Uspeh: PDFPotpis je instaliran u:{Environment.NewLine}{targetDir}";
+                ValidationText.Text =
+                    $"Uspeh: PDFPotpis je instaliran u:{Environment.NewLine}{targetDir}" +
+                    $"{Environment.NewLine}{Environment.NewLine}Aplikacija je dostupna u „Otvori pomoću” za PDF fajlove.";
                 ValidationText.Foreground = System.Windows.Media.Brushes.DarkGreen;
                 ProgressDetail.Text = "Validacija: PdfPotpis.exe je pronađen.";
             }

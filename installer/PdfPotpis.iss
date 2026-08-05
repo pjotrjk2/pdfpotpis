@@ -24,6 +24,7 @@ OutputBaseFilename=PDFPotpis-Setup-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\assets\PdfPotpis.ico
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -58,6 +59,19 @@ Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+
+[Registry]
+Root: HKCU; Subkey: "Software\Classes\PDFPotpis.Document"; ValueType: string; ValueName: ""; ValueData: "PDF dokument (PDFPotpis)"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\PDFPotpis.Document\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"",0"
+Root: HKCU; Subkey: "Software\Classes\PDFPotpis.Document\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\.pdf\OpenWithProgids"; ValueType: string; ValueName: "PDFPotpis.Document"; ValueData: ""; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "PDFPotpis"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".pdf"; ValueData: ""
+Root: HKCU; Subkey: "Software\PDFPotpis\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "PDFPotpis"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\PDFPotpis\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "Lokalno potpisivanje PDF dokumenata"
+Root: HKCU; Subkey: "Software\PDFPotpis\Capabilities\FileAssociations"; ValueType: string; ValueName: ".pdf"; ValueData: "PDFPotpis.Document"
+Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "PDFPotpis"; ValueData: "Software\PDFPotpis\Capabilities"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "Pokreni PDFPotpis"; Flags: nowait postinstall skipifsilent

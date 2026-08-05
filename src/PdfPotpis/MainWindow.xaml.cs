@@ -47,6 +47,24 @@ public partial class MainWindow : Window
         CommandBindings.Add(new CommandBinding(ApplicationCommands.Print, (_, _) => Print_Click(this, new RoutedEventArgs())));
     }
 
+    public void OpenPath(string filePath)
+    {
+        try
+        {
+            CancelPlacementInternal();
+            _document.Open(filePath);
+            ReloadViewer();
+            StatusText.Text = $"Otvoreno: {filePath}";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Neuspešno otvaranje:{Environment.NewLine}{ex.Message}", "Greška",
+                MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        UpdateCommandState();
+    }
+
     private void Open_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
@@ -61,20 +79,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        try
-        {
-            CancelPlacementInternal();
-            _document.Open(dialog.FileName);
-            ReloadViewer();
-            StatusText.Text = $"Otvoreno: {dialog.FileName}";
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(this, $"Neuspešno otvaranje:{Environment.NewLine}{ex.Message}", "Greška",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        UpdateCommandState();
+        OpenPath(dialog.FileName);
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)

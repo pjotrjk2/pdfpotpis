@@ -50,6 +50,9 @@ src/PdfPotpis.Installer/AppPayload/**
 # Installer output
 installer/output/
 
+# Staged site download artifacts (produced by prepare-release.ps1)
+website/downloads/*.exe
+website/downloads/*.sha256
 
 # Cursor / local
 .vscode/*
